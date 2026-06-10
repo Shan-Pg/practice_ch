@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>國字生字庫</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans TC', system-ui, -apple-system, 'Microsoft JhengHei', sans-serif; }
+    .term-1A { background-color: #dbeafe; color: #1e40af; } /* blue */
+    .term-1B { background-color: #e0f2fe; color: #075985; } /* sky */
+    .term-2A { background-color: #d1fae5; color: #065f46; } /* emerald */
+    .term-2B { background-color: #ccfbf1; color: #115e59; } /* teal */
+    .term-3A { background-color: #fef3c7; color: #92400e; } /* amber */
+    .term-3B { background-color: #ffedd5; color: #9a3412; } /* orange */
+    .term-4A { background-color: #ffe4e6; color: #9f1239; } /* rose */
+    .term-4B { background-color: #fce7f3; color: #9d174d; } /* pink */
+    .term-5A { background-color: #ede9fe; color: #5b21b6; } /* violet */
+    .term-5B { background-color: #f3e8ff; color: #6b21a8; } /* purple */
+    .term-6A { background-color: #e0e7ff; color: #3730a3; } /* indigo */
+    .term-6B { background-color: #fae8ff; color: #86198f; } /* fuchsia */
+    .term-dot-1A { background-color: #3b82f6; }
+    .term-dot-1B { background-color: #0ea5e9; }
+    .term-dot-2A { background-color: #10b981; }
+    .term-dot-2B { background-color: #14b8a6; }
+    .term-dot-3A { background-color: #f59e0b; }
+    .term-dot-3B { background-color: #f97316; }
+    .term-dot-4A { background-color: #f43f5e; }
+    .term-dot-4B { background-color: #ec4899; }
+    .term-dot-5A { background-color: #8b5cf6; }
+    .term-dot-5B { background-color: #a855f7; }
+    .term-dot-6A { background-color: #6366f1; }
+    .term-dot-6B { background-color: #d946ef; }
+    .chip-x:hover { color: #dc2626; }
+    .chip { cursor: pointer; transition: box-shadow 0.12s, transform 0.05s; }
+    .chip:hover { transform: translateY(-1px); }
+    .chip.selected { box-shadow: 0 0 0 2px #0f172a; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+  <div class="max-w-4xl mx-auto px-4 py-6">
+
+    <!-- Header -->
+    <header class="mb-6">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">國字生字庫</h1>
+          <p class="text-sm text-slate-500 mt-0.5">記錄孩子各學期、各課學到的國字</p>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <label class="text-sm text-slate-600">目前學期</label>
+          <select id="currentTerm" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300">
+            <optgroup label="一年級">
+              <option value="1A">一年級上學期</option>
+              <option value="1B">一年級下學期</option>
+            </optgroup>
+            <optgroup label="二年級">
+              <option value="2A">二年級上學期</option>
+              <option value="2B" selected>二年級下學期</option>
+            </optgroup>
+            <optgroup label="三年級">
+              <option value="3A">三年級上學期</option>
+              <option value="3B">三年級下學期</option>
+            </optgroup>
+            <optgroup label="四年級">
+              <option value="4A">四年級上學期</option>
+              <option value="4B">四年級下學期</option>
+            </optgroup>
+            <optgroup label="五年級">
+              <option value="5A">五年級上學期</option>
+              <option value="5B">五年級下學期</option>
+            </optgroup>
+            <optgroup label="六年級">
+              <option value="6A">六年級上學期</option>
+              <option value="6B">六年級下學期</option>
+            </optgroup>
+          </select>
+          <span class="mx-1 text-slate-300">|</span>
+          <button id="exportBtn" class="rounded-lg border border-slate-300 hover:bg-slate-50 text-sm px-3 py-1.5">匯出</button>
+          <button id="importBtn" class="rounded-lg border border-slate-300 hover:bg-slate-50 text-sm px-3 py-1.5">匯入</button>
+          <input id="importFile" type="file" accept=".json,application/json" class="hidden" />
+        </div>
+      </div>
+    </header>
+
+    <!-- Stats -->
+    <section class="grid grid-cols-2 gap-3 mb-6">
+      <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-4">
+        <div class="text-xs text-slate-500">生字總數</div>
+        <div id="statTotal" class="text-3xl font-bold text-slate-900 mt-1">0</div>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-4">
+        <div class="text-xs text-slate-500">本學期數量</div>
+        <div id="statTerm" class="text-3xl font-bold text-orange-600 mt-1">0</div>
+      </div>
+    </section>
+
+    <!-- Add vocab -->
+    <section class="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 mb-6">
+      <h2 class="text-lg font-bold text-slate-900 mb-3">加入生字</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_auto_auto] gap-2">
+        <textarea id="vocabInput" rows="2" placeholder="輸入生字，可批次貼上（用逗號、頓號、空格或換行分隔）&#10;例：春,夏 花、樹 草" class="rounded-lg border border-slate-300 px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none"></textarea>
+        <select id="vocabTerm" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm">
+          <optgroup label="一年級"><option value="1A">一上</option><option value="1B">一下</option></optgroup>
+          <optgroup label="二年級"><option value="2A">二上</option><option value="2B" selected>二下</option></optgroup>
+          <optgroup label="三年級"><option value="3A">三上</option><option value="3B">三下</option></optgroup>
+          <optgroup label="四年級"><option value="4A">四上</option><option value="4B">四下</option></optgroup>
+          <optgroup label="五年級"><option value="5A">五上</option><option value="5B">五下</option></optgroup>
+          <optgroup label="六年級"><option value="6A">六上</option><option value="6B">六下</option></optgroup>
+        </select>
+        <select id="vocabLesson" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm">
+          <option value="">全部（不分課）</option>
+        </select>
+        <button id="vocabAdd" class="rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-5 py-2">加入</button>
+      </div>
+      <p class="text-xs text-slate-500 mt-2">「全部」用於整學期一次匯入或暫時不分課的情境。同字+同學期+同課別會自動跳過。</p>
+    </section>
+
+    <!-- Filter -->
+    <section class="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 mb-4">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-sm font-medium text-slate-700">篩選</span>
+          <select id="filterTerm" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm">
+            <option value="">全部學期</option>
+            <optgroup label="一年級"><option value="1A">一年級上學期</option><option value="1B">一年級下學期</option></optgroup>
+            <optgroup label="二年級"><option value="2A">二年級上學期</option><option value="2B">二年級下學期</option></optgroup>
+            <optgroup label="三年級"><option value="3A">三年級上學期</option><option value="3B">三年級下學期</option></optgroup>
+            <optgroup label="四年級"><option value="4A">四年級上學期</option><option value="4B">四年級下學期</option></optgroup>
+            <optgroup label="五年級"><option value="5A">五年級上學期</option><option value="5B">五年級下學期</option></optgroup>
+            <optgroup label="六年級"><option value="6A">六年級上學期</option><option value="6B">六年級下學期</option></optgroup>
+          </select>
+          <select id="filterLesson" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm">
+            <option value="">全部課別</option>
+            <option value="null">未分課</option>
+          </select>
+          <input id="filterLimit" type="number" min="1" placeholder="數量（全部）" list="filterLimitOptions" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm w-28" />
+          <datalist id="filterLimitOptions">
+            <option value="5"></option>
+            <option value="10"></option>
+            <option value="20"></option>
+            <option value="30"></option>
+            <option value="50"></option>
+            <option value="100"></option>
+          </datalist>
+          <button id="filterReset" class="text-xs text-slate-400 hover:text-slate-600 underline-offset-2 hover:underline">重設</button>
+        </div>
+        <span id="filterCount" class="text-xs text-slate-500"></span>
+      </div>
+    </section>
+
+    <!-- Selection toolbar -->
+    <section id="selectBar" class="hidden rounded-2xl border border-slate-200 bg-white shadow-sm p-4 mb-4">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-sm font-medium text-slate-700">選取</span>
+          <button data-pick="all" class="rounded-lg border border-slate-300 hover:bg-slate-50 text-sm px-3 py-1">全選</button>
+          <button data-pick="clear" class="rounded-lg border border-slate-300 hover:bg-slate-50 text-sm px-3 py-1">取消全選</button>
+          <span class="text-xs text-slate-400 ml-1">或點擊生字逐字選取</span>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <span id="selCount" class="text-xs text-slate-500">已選 0 字</span>
+          <select id="copySep" class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs">
+            <option value="、">頓號分隔</option>
+            <option value=" ">空格分隔</option>
+            <option value="\n">換行分隔</option>
+            <option value="">無分隔</option>
+          </select>
+          <button id="copyBtn" class="rounded-lg bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-1.5">複製</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vocab list -->
+    <section class="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 mb-10">
+      <div id="vocabList" class="space-y-6"></div>
+      <div id="vocabEmpty" class="text-sm text-slate-400 py-10 text-center">尚未加入任何生字</div>
+      <div id="vocabNoMatch" class="hidden text-sm text-slate-400 py-10 text-center">沒有符合篩選條件的生字</div>
+    </section>
+
+  </div>
+
+  <script>
+  (() => {
+    const TERM_NAMES = {
+      '1A': '一上', '1B': '一下', '2A': '二上', '2B': '二下',
+      '3A': '三上', '3B': '三下', '4A': '四上', '4B': '四下',
+      '5A': '五上', '5B': '五下', '6A': '六上', '6B': '六下',
+    };
+    const TERM_FULL = {
+      '1A': '一年級上學期', '1B': '一年級下學期',
+      '2A': '二年級上學期', '2B': '二年級下學期',
+      '3A': '三年級上學期', '3B': '三年級下學期',
+      '4A': '四年級上學期', '4B': '四年級下學期',
+      '5A': '五年級上學期', '5B': '五年級下學期',
+      '6A': '六年級上學期', '6B': '六年級下學期',
+    };
+    const TERM_ORDER = ['1A','1B','2A','2B','3A','3B','4A','4B','5A','5B','6A','6B'];
+    const LESSON_MAX = 12;
+
+    const state = {
+      currentTerm: '2B',
+      vocab: [],
+      filter: { term: '', lesson: '', limit: '' },
+      selected: new Set(),   // 已選取的 vocab key
+      displayOrder: [],      // 目前畫面顯示順序的 vocab 引用（含 _idx）
+    };
+
+    // ---------- localStorage ----------
+    function load() {
+      state.currentTerm = localStorage.getItem('hanzi_currentTerm') || '2B';
+      let raw = [];
+      try { raw = JSON.parse(localStorage.getItem('hanzi_vocab') || '[]'); }
+      catch { raw = []; }
+      // 向後相容：補上 lesson 欄位
+      state.vocab = raw.map(v => ({
+        char: v.char,
+        term: v.term,
+        lesson: normalizeLesson(v.lesson),
+        addedAt: v.addedAt || new Date().toISOString(),
+      }));
+    }
+    const save = {
+      term: () => localStorage.setItem('hanzi_currentTerm', state.currentTerm),
+      vocab: () => localStorage.setItem('hanzi_vocab', JSON.stringify(state.vocab)),
+    };
+
+    // ---------- Utils ----------
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, m => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[m]));
+    }
+    function todayStamp() {
+      const d = new Date();
+      const p = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}`;
+    }
+    function normalizeLesson(v) {
+      const n = Number(v);
+      return Number.isInteger(n) && n >= 1 && n <= LESSON_MAX ? n : null;
+    }
+    function lessonLabel(lesson) {
+      return lesson === null ? '未分課' : `第 ${lesson} 課`;
+    }
+    function lessonSortKey(lesson) {
+      // null 排最後
+      return lesson === null ? LESSON_MAX + 1 : lesson;
+    }
+    function matchesFilter(v) {
+      const { term, lesson } = state.filter;
+      if (term && v.term !== term) return false;
+      if (lesson === '') return true;
+      if (lesson === 'null') return v.lesson === null;
+      return v.lesson === Number(lesson);
+    }
+    function vocabKey(v) {
+      return `${v.term}:${v.lesson === null ? 'n' : v.lesson}:${v.char}`;
+    }
+
+    // ---------- Populate lesson dropdowns ----------
+    function populateLessonOptions() {
+      const addSel = document.getElementById('vocabLesson');
+      const filterSel = document.getElementById('filterLesson');
+      let html = '';
+      for (let i = 1; i <= LESSON_MAX; i++) {
+        html += `<option value="${i}">第 ${i} 課</option>`;
+      }
+      addSel.insertAdjacentHTML('beforeend', html);
+      filterSel.insertAdjacentHTML('beforeend', html);
+    }
+
+    // ---------- Render: Stats ----------
+    function renderStats() {
+      document.getElementById('statTotal').textContent = state.vocab.length;
+      document.getElementById('statTerm').textContent =
+        state.vocab.filter(v => v.term === state.currentTerm).length;
+    }
+
+    // ---------- Render: Vocab list ----------
+    function renderVocab() {
+      const box = document.getElementById('vocabList');
+      const empty = document.getElementById('vocabEmpty');
+      const noMatch = document.getElementById('vocabNoMatch');
+      const countLabel = document.getElementById('filterCount');
+      const selectBar = document.getElementById('selectBar');
+
+      state.displayOrder = [];
+
+      if (state.vocab.length === 0) {
+        box.innerHTML = '';
+        empty.classList.remove('hidden');
+        noMatch.classList.add('hidden');
+        selectBar.classList.add('hidden');
+        countLabel.textContent = '';
+        renderSelectBar();
+        return;
+      }
+      empty.classList.add('hidden');
+
+      const matched = state.vocab
+        .map((v, idx) => ({ ...v, _idx: idx }))
+        .filter(matchesFilter);
+
+      const lim = Number(state.filter.limit);
+      const filtered = (Number.isInteger(lim) && lim > 0) ? matched.slice(0, lim) : matched;
+
+      countLabel.textContent = (filtered.length < matched.length)
+        ? `顯示 ${filtered.length} / ${matched.length} 字`
+        : `共 ${filtered.length} 字`;
+
+      if (filtered.length === 0) {
+        box.innerHTML = '';
+        noMatch.classList.remove('hidden');
+        selectBar.classList.add('hidden');
+        renderSelectBar();
+        return;
+      }
+      noMatch.classList.add('hidden');
+      selectBar.classList.remove('hidden');
+
+      const byTerm = {};
+      for (const v of filtered) (byTerm[v.term] ||= []).push(v);
+
+      const termHtml = TERM_ORDER.filter(t => byTerm[t]?.length).map(t => {
+        const byLesson = {};
+        for (const v of byTerm[t]) {
+          const key = v.lesson === null ? 'null' : String(v.lesson);
+          (byLesson[key] ||= []).push(v);
+        }
+        const lessonKeys = Object.keys(byLesson).sort((a, b) =>
+          lessonSortKey(a === 'null' ? null : Number(a)) -
+          lessonSortKey(b === 'null' ? null : Number(b))
+        );
+
+        const lessonsHtml = lessonKeys.map(k => {
+          const list = byLesson[k];
+          const lesson = k === 'null' ? null : Number(k);
+          const chips = list.map(v => {
+            state.displayOrder.push(v);
+            const key = vocabKey(v);
+            const sel = state.selected.has(key) ? ' selected' : '';
+            return `
+              <span class="chip${sel} inline-flex items-center gap-1 rounded-full term-${t} px-3 py-1.5 text-lg font-medium" data-key="${escapeHtml(key)}">
+                <span>${escapeHtml(v.char)}</span>
+                <button data-del="${v._idx}" class="chip-x text-current/60 text-base leading-none ml-0.5 px-1" title="刪除">×</button>
+              </span>
+            `;
+          }).join('');
+          return `
+            <div>
+              <div class="text-xs font-medium text-slate-500 mb-1.5 ml-0.5">${lessonLabel(lesson)}（${list.length} 字）</div>
+              <div class="flex flex-wrap gap-2">${chips}</div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-100 flex-wrap">
+              <div class="flex items-center gap-2">
+                <span class="inline-block w-2.5 h-2.5 rounded-full term-dot-${t}"></span>
+                <span class="text-base font-semibold text-slate-800">${TERM_FULL[t]}</span>
+                <span class="text-xs text-slate-400">（${byTerm[t].length} 字）</span>
+              </div>
+              <button data-clear="${t}" class="text-xs text-slate-400 hover:text-red-500">清空此學期</button>
+            </div>
+            <div class="space-y-3 pl-1">${lessonsHtml}</div>
+          </div>
+        `;
+      }).join('');
+
+      box.innerHTML = termHtml;
+
+      // 點 chip 切換選取（×按鈕另外處理）
+      box.querySelectorAll('span.chip').forEach(chip => {
+        chip.addEventListener('click', e => {
+          if (e.target.closest('button[data-del]')) return;
+          const key = chip.dataset.key;
+          if (state.selected.has(key)) state.selected.delete(key);
+          else state.selected.add(key);
+          chip.classList.toggle('selected');
+          renderSelectBar();
+        });
+      });
+
+      box.querySelectorAll('button[data-del]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const i = Number(btn.dataset.del);
+          const v = state.vocab[i];
+          if (!v) return;
+          const where = `${TERM_FULL[v.term]} ${lessonLabel(v.lesson)}`;
+          if (!confirm(`確定要刪除「${v.char}」（${where}）嗎？`)) return;
+          state.selected.delete(vocabKey(v));
+          state.vocab.splice(i, 1);
+          save.vocab();
+          renderVocab(); renderStats();
+        });
+      });
+      box.querySelectorAll('button[data-clear]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const t = btn.dataset.clear;
+          const n = state.vocab.filter(v => v.term === t).length;
+          if (!confirm(`確定要清空「${TERM_FULL[t]}」的 ${n} 個生字嗎？此動作無法復原。`)) return;
+          for (const v of state.vocab.filter(v => v.term === t)) state.selected.delete(vocabKey(v));
+          state.vocab = state.vocab.filter(v => v.term !== t);
+          save.vocab();
+          renderVocab(); renderStats();
+        });
+      });
+
+      renderSelectBar();
+    }
+
+    // ---------- Render: Select bar ----------
+    function renderSelectBar() {
+      const total = state.displayOrder.length;
+      let selInView = 0;
+      for (const v of state.displayOrder) if (state.selected.has(vocabKey(v))) selInView++;
+      document.getElementById('selCount').textContent = `已選 ${selInView} / ${total} 字`;
+      document.getElementById('copyBtn').disabled = selInView === 0;
+    }
+
+    // ---------- Add vocab ----------
+    function addVocab() {
+      const raw = document.getElementById('vocabInput').value;
+      const term = document.getElementById('vocabTerm').value;
+      const lesson = normalizeLesson(document.getElementById('vocabLesson').value);
+
+      const tokens = raw.split(/[,，、\s\n\r\t]+/).filter(Boolean);
+      const chars = [];
+      for (const t of tokens) for (const ch of t) chars.push(ch);
+
+      if (chars.length === 0) { alert('請先輸入生字'); return; }
+
+      let added = 0, skipped = 0;
+      for (const ch of chars) {
+        const dup = state.vocab.some(v => v.char === ch && v.term === term && v.lesson === lesson);
+        if (dup) { skipped++; continue; }
+        state.vocab.push({ char: ch, term, lesson, addedAt: new Date().toISOString() });
+        added++;
+      }
+      save.vocab();
+      document.getElementById('vocabInput').value = '';
+      renderVocab(); renderStats();
+
+      if (added === 0 && skipped > 0) {
+        alert(`沒有新增任何生字（${skipped} 個已存在於該學期該課別）`);
+      } else if (skipped > 0) {
+        alert(`新增 ${added} 個生字，跳過 ${skipped} 個重複。`);
+      }
+    }
+
+    // ---------- Export ----------
+    function exportJson() {
+      const payload = {
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        currentTerm: state.currentTerm,
+        vocab: state.vocab,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hanzi-vocab-${todayStamp()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    // ---------- Import ----------
+    function importJson(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        let data;
+        try { data = JSON.parse(reader.result); }
+        catch { alert('檔案格式錯誤，不是有效的 JSON。'); return; }
+
+        if (!data || (data.version !== 1 && data.version !== 2) || !Array.isArray(data.vocab)) {
+          alert('檔案內容不是這個工具的備份格式。');
+          return;
+        }
+
+        const valid = data.vocab
+          .filter(v => v && typeof v.char === 'string' && v.char.length === 1 && TERM_ORDER.includes(v.term))
+          .map(v => ({
+            char: v.char,
+            term: v.term,
+            lesson: data.version === 1 ? null : normalizeLesson(v.lesson),
+            addedAt: v.addedAt || new Date().toISOString(),
+          }));
+
+        if (valid.length === 0) {
+          alert('檔案中沒有可匯入的有效生字。');
+          return;
+        }
+
+        const mode = confirm(
+          `匯入 ${valid.length} 筆生字（備份格式 v${data.version}）\n\n` +
+          `按「確定」= 合併（保留現有，重複跳過）\n` +
+          `按「取消」= 取代（清掉現有再匯入）`
+        );
+
+        let added = 0, skipped = 0;
+        if (mode) {
+          for (const v of valid) {
+            const dup = state.vocab.some(x => x.char === v.char && x.term === v.term && x.lesson === v.lesson);
+            if (dup) { skipped++; continue; }
+            state.vocab.push(v);
+            added++;
+          }
+        } else {
+          if (!confirm('真的要清掉現有的所有生字並用檔案內容取代嗎？')) return;
+          state.vocab = valid.slice();
+          state.selected.clear();
+          added = state.vocab.length;
+        }
+
+        save.vocab();
+        renderVocab(); renderStats();
+        alert(`完成！新增 ${added} 筆${skipped ? `，跳過 ${skipped} 筆重複` : ''}。`);
+      };
+      reader.onerror = () => alert('讀取檔案失敗。');
+      reader.readAsText(file);
+    }
+
+    // ---------- Wire up ----------
+    function bind() {
+      const ct = document.getElementById('currentTerm');
+      ct.value = state.currentTerm;
+      ct.addEventListener('change', () => {
+        state.currentTerm = ct.value;
+        document.getElementById('vocabTerm').value = ct.value;
+        save.term(); renderStats();
+      });
+      document.getElementById('vocabTerm').value = state.currentTerm;
+
+      document.getElementById('vocabAdd').addEventListener('click', addVocab);
+
+      // filter
+      const ft = document.getElementById('filterTerm');
+      const fl = document.getElementById('filterLesson');
+      const flim = document.getElementById('filterLimit');
+      const onFilterChange = () => { state.selected.clear(); renderVocab(); };
+      ft.addEventListener('change', () => { state.filter.term = ft.value; onFilterChange(); });
+      fl.addEventListener('change', () => { state.filter.lesson = fl.value; onFilterChange(); });
+      flim.addEventListener('input', () => { state.filter.limit = flim.value; onFilterChange(); });
+      document.getElementById('filterReset').addEventListener('click', () => {
+        ft.value = ''; fl.value = ''; flim.value = '';
+        state.filter.term = ''; state.filter.lesson = ''; state.filter.limit = '';
+        onFilterChange();
+      });
+
+      // selection toolbar
+      document.querySelectorAll('#selectBar button[data-pick]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const mode = btn.dataset.pick;
+          if (mode === 'clear') {
+            state.selected.clear();
+          } else if (mode === 'all') {
+            for (const v of state.displayOrder) state.selected.add(vocabKey(v));
+          }
+          renderVocab();
+        });
+      });
+
+      document.getElementById('copyBtn').addEventListener('click', async () => {
+        const sepRaw = document.getElementById('copySep').value;
+        const sep = sepRaw === '\\n' ? '\n' : sepRaw;
+        const chars = state.displayOrder
+          .filter(v => state.selected.has(vocabKey(v)))
+          .map(v => v.char);
+        if (chars.length === 0) return;
+        const text = chars.join(sep);
+        try {
+          await navigator.clipboard.writeText(text);
+          const b = document.getElementById('copyBtn');
+          const orig = b.textContent;
+          b.textContent = `已複製 ${chars.length} 字 ✓`;
+          setTimeout(() => b.textContent = orig, 1500);
+        } catch {
+          alert('複製失敗，請手動選取下方文字：\n\n' + text);
+        }
+      });
+
+      document.getElementById('exportBtn').addEventListener('click', exportJson);
+      document.getElementById('importBtn').addEventListener('click', () => {
+        document.getElementById('importFile').click();
+      });
+      document.getElementById('importFile').addEventListener('change', e => {
+        const f = e.target.files?.[0];
+        if (f) importJson(f);
+        e.target.value = '';
+      });
+    }
+
+    // ---------- Boot ----------
+    populateLessonOptions();
+    load();
+    bind();
+    renderStats();
+    renderVocab();
+  })();
+  </script>
+</body>
+</html>
